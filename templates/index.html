@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+        h1 { margin: 0; color: #4ade80; }
+        .card {
+            background: #2d2d2d;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .video-feed img {
+            width: 100%;
+            border-radius: 8px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #3d3d3d;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+        .text-green { color: #4ade80; }
+        .text-red { color: #f87171; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #444;
+        }
+        th { color: #aaa; }
+        .history-list {
+            height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🅿️ Smart Parking System</h1>
+            <div>
+                <span id="cnn-status">System: Online</span>
+            </div>
+        </div>
+
+        <div class="card video-feed">
+            <h2>Live Feed</h2>
+            <img src="{{ url_for('video_feed') }}" alt="Parking Video">
+        </div>
+
+        <div>
+            <div class="card">
+                <h2>Real-time Status</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value text-green" id="empty-count">--</span>
+                        <span class="stat-label">Empty Slots</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value text-red" id="occupied-count">--</span>
+                        <span class="stat-label">Occupied Slots</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top: 20px;">
+                <h2>Recent Activity</h2>
+                <div class="history-list">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>Slot</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateStats() {
+            fetch('/api/slots')
+                .then(response => response.json())
+                .then(data => {
+                    const empty = data.filter(s => s.status === 'Empty').length;
+                    const occupied = data.filter(s => s.status === 'Occupied').length;
+                    
+                    document.getElementById('empty-count').textContent = empty;
+                    document.getElementById('occupied-count').textContent = occupied;
+                });
+        }
+
+        function updateHistory() {
+            fetch('/api/history')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#history-table tbody');
+                    tbody.innerHTML = '';
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>#${row.slot_id}</td>
+                            <td class="${row.status === 'Empty' ? 'text-green' : 'text-red'}">${row.status}</td>
+                            <td>${new Date(row.timestamp).toLocaleTimeString()}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+        }
+
+        setInterval(updateStats, 1000);
+        setInterval(updateHistory, 2000);
+        updateStats();
+        updateHistory();
+    </script>
+</body>
+</html>

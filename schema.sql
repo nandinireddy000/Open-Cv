@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS parking_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slot_id INTEGER NOT NULL,
+    status TEXT NOT NULL, -- 'Occupied' or 'Empty'
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS current_status (
+    slot_id INTEGER PRIMARY KEY,
+    status TEXT NOT NULL,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+);
